@@ -11,8 +11,21 @@ document.addEventListener("DOMContentLoaded", () => {
         context.stroke();
     }
 
-    const matrixRotate = (point, radians) => {
-        // Apply Matrix
+    const matrixRotate = (point, radians, couterClockwise=false) => {
+        let rotatedPoint = Object.create(null);
+        if (couterClockwise) {
+            let [a, b] = [Math.cos(radians), Math.sin(radians)];
+            let [c, d] = [-1 * Math.sin(radians), Math.cos(radians)];
+            rotatedPoint.x = (point.x * a) + (point.y * b)
+            rotatedPoint.y = (point.x * c) + (point.y * d)
+        } else {
+            let [a, b] = [Math.cos(radians), -1 * Math.sin(radians)];
+            let [c, d] = [Math.sin(radians), Math.cos(radians)];
+            rotatedPoint.x = (point.x * a) + (point.y * b)
+            rotatedPoint.y = (point.x * c) + (point.y * d)
+        }
+
+        return rotatedPoint;
     }
 
     const drawTree = (basePoint, length) => {
@@ -40,7 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
     context.strokeStyle = "white";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    drawTree({x: canvas.width/2, y: 0}, 300);
+    // drawTree({x: canvas.width/2, y: 0}, 300);
+    let startPoint = { x : canvas.width/2, y: 0 }
+    let testPoint = { x: canvas.width/2 , y: 100 };
+    let rotatedPoint = matrixRotate(testPoint, Math.PI/4, true);
+    drawLine(startPoint, testPoint);
+    drawLine(startPoint, rotatedPoint);
+
+    console.log(testPoint);
+    console.log(rotatedPoint);
 
     document.body.appendChild(canvas);
 });
