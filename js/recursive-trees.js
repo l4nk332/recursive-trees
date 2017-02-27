@@ -1,67 +1,71 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // Globals
+    // =======
     const canvas = document.createElement("canvas");
     [canvas.width, canvas.height] = [screen.width, screen.height];
     const context = canvas.getContext("2d");
 
 
-    const drawLine = (startPoint, endPoint) => {
-        context.moveTo(startPoint.x, startPoint.y);
+    const setupCanvasState = () => {
+        context.fillStyle = "black";
+        context.strokeStyle = "white";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.translate(canvas.width/2, canvas.height/2);
+        context.scale(1, -1);
+    };
+
+    const drawLineFromOrigin = (endPoint) => {
+        context.moveTo(0, 0);
         context.lineTo(endPoint.x, endPoint.y);
         context.stroke();
     }
 
-    const matrixRotate = (point, radians, couterClockwise=false) => {
-        let rotatedPoint = Object.create(null);
-        if (couterClockwise) {
-            let [a, b] = [Math.cos(radians), Math.sin(radians)];
-            let [c, d] = [-1 * Math.sin(radians), Math.cos(radians)];
-            rotatedPoint.x = (point.x * a) + (point.y * b)
-            rotatedPoint.y = (point.x * c) + (point.y * d)
-        } else {
-            let [a, b] = [Math.cos(radians), -1 * Math.sin(radians)];
-            let [c, d] = [Math.sin(radians), Math.cos(radians)];
-            rotatedPoint.x = (point.x * a) + (point.y * b)
-            rotatedPoint.y = (point.x * c) + (point.y * d)
-        }
+    const drawTreeStem = (stemEndPoint) => {
+        const invertedStem = Object.create(null);
+        [invertedStem.x, invertedStem.y] = [stemEndPoint.x, -1*stemEndPoint.y];
+        drawLineFromOrigin(invertedStem);
+    };
 
-        return rotatedPoint;
-    }
-
-    const drawTree = (basePoint, length) => {
-        if (length < 2) {
+    const drawTreeTop = (basePoint, branchLength, spread=2) => {
+        if (branchLength < 2) {
             return;
         }
 
         let leftPoint = Object.create(null);
-        leftPoint.x = basePoint.x - length;
-        leftPoint.y = basePoint.y + length;
+        leftPoint.x = -1 * branchLength/spread;
+        leftPoint.y = branchLength;
 
         let rightPoint = Object.create(null);
-        rightPoint.x = basePoint.x + length;
-        rightPoint.y = basePoint.y + length;
+        rightPoint.x = branchLength/spread;
+        rightPoint.y = branchLength;
 
-        drawLine(basePoint, leftPoint);
-        drawTree(leftPoint, length/2);
+        drawLineFromOrigin(leftPoint);
+        drawLineFromOrigin(rightPoint);
 
-        drawLine(basePoint, rightPoint);
-        drawTree(rightPoint, length/2);
+        // Handle right side of tree
+        context.save();
+        context.translate(rightPoint.x, rightPoint.y);
+        context.rotate(-1 * Math.PI/4);
+        drawTreeTop(rightPoint, branchLength*0.6);
+        context.restore();
+
+        // Handle left side of tree
+        context.save();
+        context.translate(leftPoint.x, leftPoint.y);
+        context.rotate(Math.PI/4);
+        drawTreeTop(leftPoint, branchLength*0.6);
+        context.restore();
     }
 
 
-    context.fillStyle = "black";
-    context.strokeStyle = "white";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    setupCanvasState();
 
-    // drawTree({x: canvas.width/2, y: 0}, 300);
-    let startPoint = { x : canvas.width/2, y: 0 }
-    let testPoint = { x: canvas.width/2 , y: 100 };
-    let rotatedPoint = matrixRotate(testPoint, Math.PI/4, true);
-    drawLine(startPoint, testPoint);
-    drawLine(startPoint, rotatedPoint);
+    const stemTopIntersect = Object.create(null);
+    [stemTopIntersect.x, stemTopIntersect.y] = [0, canvas.height/3];
 
-    console.log(testPoint);
-    console.log(rotatedPoint);
+    drawTreeStem(stemTopIntersect);
+    drawTreeTop(stemTopIntersect, 150);
 
     document.body.appendChild(canvas);
 });
